@@ -25,6 +25,7 @@ DialogLayer {
     readonly property var translation: veyra.liveTranslation || null
     readonly property bool supported: translation !== null && translation.supported
     readonly property int provider: translation ? translation.provider : 0
+    readonly property bool captionsOnly: provider === 3
     readonly property int source: translation ? translation.recognitionSource : 0
     readonly property bool screenSource: source === 2
     readonly property int region: translation ? translation.screenRegion : 0
@@ -46,12 +47,20 @@ DialogLayer {
         {id: "4", label: "4"}, {id: "5", label: "5"}, {id: "6", label: "6"}, {id: "7", label: "7"}, {id: "8", label: "8"}
     ]
     readonly property var subtitleLineOptions: [{id: "1", label: "1"}, {id: "2", label: "2"}, {id: "3", label: "3"}]
+    readonly property var subtitlePositionOptions: [
+        {id: "0", label: qsTr("自动")},
+        {id: "1", label: qsTr("底部")},
+        {id: "2", label: qsTr("顶部")}
+    ]
     readonly property int subtitleSize: veyra.preferences.liveSubtitleSize || veyra.preferences.subtitleSize || 22
     readonly property color subtitleColor: veyra.preferences.liveSubtitleColor || "#ffffff"
     readonly property real subtitleShadow: (veyra.preferences.liveSubtitleShadow ?? -1) >= 0
         ? veyra.preferences.liveSubtitleShadow : ((veyra.preferences.subtitleOutline ?? 2) > 0 ? 1.8 : 0)
     readonly property int subtitleLines: Math.min(3, Math.max(1,
         veyra.preferences.liveSubtitleLines || (veyra.preferences.subtitleLines ?? 2)))
+    readonly property int subtitlePosition: Math.min(2, Math.max(0, veyra.preferences.liveSubtitlePosition ?? 0))
+    readonly property int subtitleVerticalOffset: Math.min(80, Math.max(0, veyra.preferences.liveSubtitleVerticalOffset ?? 0))
+    readonly property int subtitleHorizontalOffset: Math.min(40, Math.max(-40, veyra.preferences.liveSubtitleHorizontalOffset ?? 0))
     NativeDialogs.ColorDialog {
         id: captionColor
         title: qsTr("选择字幕颜色")
@@ -71,7 +80,8 @@ DialogLayer {
     readonly property var providers: [
         {id: "0", label: qsTr("本地模型")},
         {id: "1", label: qsTr("自定义 API（OpenAI 兼容）")},
-        {id: "2", label: "MyMemory"}
+        {id: "2", label: "MyMemory"},
+        {id: "3", label: qsTr("不翻译（仅实时字幕）")}
     ]
     readonly property var languages: [
         {id: "zh-CN", label: qsTr("简体中文")}, {id: "zh-TW", label: qsTr("繁體中文")},
@@ -105,14 +115,20 @@ DialogLayer {
             }
         }
         VRow {
-            label: qsTr("在画面上显示实时翻译")
+            label: root.captionsOnly ? qsTr("在画面上显示实时字幕") : qsTr("在画面上显示实时翻译")
             hintBelow: true
             hint: root.useVeyraAudio
-                ? qsTr("识别播放中的声音，翻译后的字幕显示在 Veyra 预览画面内。")
+                ? (root.captionsOnly
+                    ? qsTr("识别播放中的声音，实时字幕直接显示在 Veyra 预览画面内。")
+                    : qsTr("识别播放中的声音，翻译后的字幕显示在 Veyra 预览画面内。"))
                 : root.supported
                 ? (root.screenSource
-                    ? qsTr("读取画面上的英文字幕等文字并翻译，译文显示在 Veyra 预览画面内。")
-                    : qsTr("使用 Windows 实时字幕识别系统播放的声音，译文显示在 Veyra 预览画面内。"))
+                    ? (root.captionsOnly
+                        ? qsTr("读取画面上的字幕文字并直接显示在 Veyra 预览画面内。")
+                        : qsTr("读取画面上的英文字幕等文字并翻译，译文显示在 Veyra 预览画面内。"))
+                    : (root.captionsOnly
+                        ? qsTr("使用 Windows 实时字幕识别系统播放的声音，字幕显示在 Veyra 预览画面内。")
+                        : qsTr("使用 Windows 实时字幕识别系统播放的声音，译文显示在 Veyra 预览画面内。")))
                 : (root.screenSource ? qsTr("画面文字识别需要 Windows 10 或更新版本")
                                      : qsTr("实时翻译需要 Windows 11 22H2 或更新版本"))
             VSwitch {
@@ -214,14 +230,16 @@ DialogLayer {
             visible: root.supported
             label: qsTr("翻译引擎")
             hintBelow: true
-            hint: root.provider === 0
-                ? qsTr("在本机运行，字幕文本留在本机。")
-                : qsTr("启用后会把识别出的字幕文本发送给所选服务。")
+            hint: root.captionsOnly
+                ? qsTr("仅显示识别出的实时字幕，不启动翻译模型，也不发送网络请求。")
+                : root.provider === 0
+                    ? qsTr("在本机运行，字幕文本留在本机。")
+                    : qsTr("启用后会把识别出的字幕文本发送给所选服务。")
             VSelect {
                 objectName: "live-translation-provider"
                 implicitWidth: 224
                 options: root.providers
-                value: root.providers[root.provider].label
+                value: root.languageLabel(options, String(root.provider))
                 onPicked: id => { root.translation.provider = Number(id) }
             }
         }
@@ -238,7 +256,8 @@ DialogLayer {
             }
         }
         VRow {
-            visible: root.supported
+            objectName: "live-translation-target-row"
+            visible: root.supported && !root.captionsOnly
             label: qsTr("翻译成")
             VSelect {
                 objectName: "live-translation-target"
@@ -248,7 +267,8 @@ DialogLayer {
             }
         }
         VRow {
-            visible: root.supported
+            objectName: "live-translation-original-row"
+            visible: root.supported && !root.captionsOnly
             label: qsTr("同时显示原文")
             VSwitch {
                 checked: root.translation ? root.translation.showOriginal : true
@@ -410,10 +430,15 @@ DialogLayer {
         Layout.fillWidth: true
         visible: root.translation && root.translation.enabled &&
             (root.translation.recognitionRtf > 0 || root.translation.averageTranslationMs > 0 || root.translation.skippedSentences > 0)
-        text: !root.translation ? "" : qsTr("识别实时倍率 %1 · 翻译平均 %2 ms · 跳过 %3 句")
-            .arg(Number(root.translation.recognitionRtf ?? 0).toFixed(2))
-            .arg(Math.round(root.translation.averageTranslationMs ?? 0))
-            .arg(root.translation.skippedSentences ?? 0)
+        text: !root.translation ? ""
+            : root.captionsOnly
+                ? qsTr("识别实时倍率 %1 · 跳过 %2 句")
+                    .arg(Number(root.translation.recognitionRtf ?? 0).toFixed(2))
+                    .arg(root.translation.skippedSentences ?? 0)
+                : qsTr("识别实时倍率 %1 · 翻译平均 %2 ms · 跳过 %3 句")
+                    .arg(Number(root.translation.recognitionRtf ?? 0).toFixed(2))
+                    .arg(Math.round(root.translation.averageTranslationMs ?? 0))
+                    .arg(root.translation.skippedSentences ?? 0)
         color: Theme.t2
         font.family: Theme.fontUi
         font.pixelSize: Theme.fsBody
@@ -424,18 +449,27 @@ DialogLayer {
     DialogGroup {
         visible: root.supported
         Rectangle {
+            id: livePreview
             objectName: "live-subtitle-preview"
             Layout.fillWidth: true
-            implicitHeight: Math.max(92, sample.contentHeight + 22)
+            implicitHeight: Math.max(124, sample.contentHeight + 36)
             radius: 10
             color: Theme.videoBlack
             border.width: 1
             border.color: Theme.stroke
             clip: true
+            gradient: Gradient {
+                GradientStop { position: 0; color: "#6c7685" }
+                GradientStop { position: 1; color: "#404b60" }
+            }
+            TextMetrics {
+                id: sampleMetrics
+                font: sample.font
+                text: sample.text
+            }
             Text {
-                anchors.centerIn: parent
-                anchors.horizontalCenterOffset: root.subtitleShadow
-                anchors.verticalCenterOffset: root.subtitleShadow
+                x: sample.x + root.subtitleShadow
+                y: sample.y + root.subtitleShadow
                 visible: root.subtitleShadow > 0
                 width: sample.width
                 text: sample.text
@@ -444,17 +478,18 @@ DialogLayer {
                 horizontalAlignment: Text.AlignHCenter
                 wrapMode: Text.Wrap
             }
-            // A lighter sample background makes both the dark shadow and the
-            // foreground colour visible while editing.
-            gradient: Gradient {
-                GradientStop { position: 0; color: "#6c7685" }
-                GradientStop { position: 1; color: "#404b60" }
-            }
             Text {
                 id: sample
                 objectName: "live-subtitle-sample"
-                anchors.centerIn: parent
-                width: parent.width - 32
+                readonly property real pad: 8
+                readonly property real baseX: (livePreview.width - width) / 2
+                    + livePreview.width * root.subtitleHorizontalOffset / 100
+                readonly property real baseY: root.subtitlePosition === 2
+                    ? pad + livePreview.height * root.subtitleVerticalOffset / 100
+                    : livePreview.height - pad - height - livePreview.height * root.subtitleVerticalOffset / 100
+                x: Math.max(pad, Math.min(livePreview.width - pad - width, baseX))
+                y: Math.max(pad, Math.min(livePreview.height - pad - height, baseY))
+                width: Math.min(livePreview.width - 16, Math.ceil(sampleMetrics.width) + 8)
                 text: qsTr("字幕预览")
                 color: root.subtitleColor
                 font.family: "Microsoft YaHei UI"
@@ -463,6 +498,39 @@ DialogLayer {
                 styleColor: "#c0000000"
                 horizontalAlignment: Text.AlignHCenter
                 wrapMode: Text.Wrap
+            }
+        }
+        VRow {
+            label: qsTr("字幕位置")
+            VSeg {
+                objectName: "live-subtitle-position"
+                options: root.subtitlePositionOptions
+                current: String(root.subtitlePosition)
+                onPicked: id => veyra.setPreference("liveSubtitlePosition", Number(id))
+            }
+        }
+        VRow {
+            label: root.subtitlePosition === 2 ? qsTr("距顶部距离") : qsTr("距底部距离")
+            value: root.subtitleVerticalOffset + "%"
+            VSlider {
+                objectName: "live-subtitle-vertical-offset"
+                from: 0; to: 80; stepSize: 1
+                value: root.subtitleVerticalOffset
+                valueFromModel: true
+                onMoved: value => veyra.setPreference("liveSubtitleVerticalOffset", Math.round(value))
+            }
+        }
+        VRow {
+            label: qsTr("水平偏移")
+            value: (root.subtitleHorizontalOffset > 0 ? "+" : "") + root.subtitleHorizontalOffset + "%"
+            VSlider {
+                objectName: "live-subtitle-horizontal-offset"
+                from: -40; to: 40; stepSize: 1
+                center: true
+                showCenterFill: true
+                value: root.subtitleHorizontalOffset
+                valueFromModel: true
+                onMoved: value => veyra.setPreference("liveSubtitleHorizontalOffset", Math.round(value))
             }
         }
         VRow {
@@ -507,7 +575,7 @@ DialogLayer {
             }
         }
         VRow {
-            label: qsTr("译文行数上限")
+            label: root.captionsOnly ? qsTr("字幕行数上限") : qsTr("译文行数上限")
             VSelect {
                 options: root.subtitleLineOptions
                 value: String(root.subtitleLines)
@@ -524,6 +592,9 @@ DialogLayer {
                 veyra.setPreference("liveSubtitleColor", "#ffffff")
                 veyra.setPreference("liveSubtitleShadow", -1)
                 veyra.setPreference("liveSubtitleLines", 0)
+                veyra.setPreference("liveSubtitlePosition", 0)
+                veyra.setPreference("liveSubtitleVerticalOffset", 0)
+                veyra.setPreference("liveSubtitleHorizontalOffset", 0)
             }
         }
     }

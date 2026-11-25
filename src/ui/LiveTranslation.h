@@ -27,6 +27,7 @@ class LiveTranslation final : public QObject {
     Q_PROPERTY(bool windowsCaptionsSupported READ windowsCaptionsSupported CONSTANT)
     Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY changed)
     Q_PROPERTY(int provider READ provider WRITE setProvider NOTIFY changed)
+    Q_PROPERTY(bool captionsOnly READ captionsOnly NOTIFY changed)
     Q_PROPERTY(int recognitionSource READ recognitionSource WRITE setRecognitionSource NOTIFY changed)
     Q_PROPERTY(int recognitionModel READ recognitionModel WRITE setRecognitionModel NOTIFY changed)
     Q_PROPERTY(int recognitionThreads READ recognitionThreads WRITE setRecognitionThreads NOTIFY changed)
@@ -52,7 +53,7 @@ class LiveTranslation final : public QObject {
     Q_PROPERTY(double downloadProgress READ downloadProgress NOTIFY changed)
     Q_PROPERTY(qint64 downloadBytes READ downloadBytes CONSTANT)
 public:
-    enum Provider { Local, OpenAi, MyMemory };
+    enum Provider { Local, OpenAi, MyMemory, None };
     enum Source { VeyraAudio, WindowsCaptions, ScreenText };
     enum ScreenRegion { BottomSubtitles, BottomWide, TopSubtitles, WholePicture, CustomRegion };
     explicit LiveTranslation(const QString& directory, QObject* parent = nullptr);
@@ -72,6 +73,7 @@ public:
     static bool windowsCaptionsSupported();
     bool enabled() const { return enabled_; }
     int provider() const { return provider_; }
+    bool captionsOnly() const { return provider_ == None; }
     int recognitionSource() const { return recognitionSource_; }
     int recognitionModel() const { return recognitionModel_; }
     int recognitionThreads() const { return recognitionThreads_; }

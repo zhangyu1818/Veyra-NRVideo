@@ -19,6 +19,7 @@ struct SubtitleLine {
     engine::SubtitleStyle style;
     int alignOverride=0;               // {\anN}, 0 = style alignment
     double posX=-1,posY=-1;            // {\pos(x,y)} normalised to 0..1 (or -1)
+    double offsetX=0.0,offsetY=0.0;
     bool secondary=false;
     std::shared_ptr<const engine::SubtitleBitmapFrame> bitmap;
     // ASS/SSA track drawn by libass (builds that link it): the whole script is

@@ -176,7 +176,7 @@ QRectF boundedRegion(QRectF r) {
 LiveTranslation::LiveTranslation(const QString& directory, QObject* parent)
     : QObject(parent), assets_(directory), asr_(directory),
       settings_(QDir(directory).filePath(QStringLiteral("live-translation.ini")), QSettings::IniFormat) {
-    provider_ = std::clamp(settings_.value(QStringLiteral("provider"), int(Local)).toInt(), int(Local), int(MyMemory));
+    provider_ = std::clamp(settings_.value(QStringLiteral("provider"), int(Local)).toInt(), int(Local), int(None));
     sourceLanguage_ = settings_.value(QStringLiteral("source")).toString();
     targetLanguage_ = settings_.value(QStringLiteral("target"), QLocale().bcp47Name()).toString();
     if (!sourceLanguage_.isEmpty() && !languageCode(sourceLanguage_)) sourceLanguage_ = QStringLiteral("en");
@@ -230,7 +230,7 @@ LiveTranslation::LiveTranslation(const QString& directory, QObject* parent)
         draftHideAt_ = text.isEmpty() ? 0 : clock_.elapsed() + 2500;
         if (text == speechDraft_) return;
         speechDraft_ = text;
-        if (showOriginal_) emit captionChanged();
+        if (showOriginal_ || captionsOnly()) emit captionChanged();
     });
     connect(&reader_, &QProcess::readyReadStandardOutput, this, &LiveTranslation::readCaptions);
     connect(&reader_, &QProcess::errorOccurred, this, [this](QProcess::ProcessError error) {
@@ -347,7 +347,7 @@ LiveTranslation::DisplayCaption LiveTranslation::displayCaption() const {
         return screenPresenter_.shown() ? *screenPresenter_.shown() : DisplayCaption{};
     const auto now = clock_.elapsed();
     if (recognitionSource_ == VeyraAudio) {
-        const auto draft = showOriginal_ ? speechDraft_ : QString{};
+        const auto draft = (showOriginal_ || captionsOnly()) ? speechDraft_ : QString{};
         if (speechShown_ && now < speechHideAt_)
             return {speechShown_->work.sentence.text, speechShown_->translated, draft};
         return {{}, {}, draft};
@@ -419,7 +419,7 @@ void LiveTranslation::setEnabled(bool value) {
 }
 
 void LiveTranslation::setProvider(int value) {
-    if (value < Local || value > MyMemory || provider_ == value) return;
+    if (value < Local || value > None || provider_ == value) return;
     setEnabled(false);
     provider_ = value;
     if (provider_ == MyMemory && sourceLanguage_.isEmpty()) sourceLanguage_ = QStringLiteral("en");
@@ -645,8 +645,8 @@ void LiveTranslation::acceptScreenLine(const QString& text) {
     screenStart_ = now;
     const QString language = screenTextLanguage();
     const auto key = cacheKey(language, text);
-    const auto direct = sameLanguageCaption(text, language, targetLanguage_);
-    const auto* cached = cache_.object(key);
+    const auto direct = captionsOnly() ? text : sameLanguageCaption(text, language, targetLanguage_);
+    const auto* cached = captionsOnly() ? nullptr : cache_.object(key);
     if (direct.isEmpty() && !cached) return;
     screenRequested_ = screenSequence_;
     displayTranslation(Work{screenSequence_, {text, language, sink::recordingClockUs()}, {}, key, now},
@@ -656,7 +656,7 @@ void LiveTranslation::acceptScreenLine(const QString& text) {
 void LiveTranslation::stepScreenPresenter() {
     using Act = CaptionPresenter<DisplayCaption>::Act;
     switch (screenPresenter_.tick(clock_.elapsed())) {
-    case Act::Show: setStatus(tr("实时翻译运行中")); emit captionChanged(); break;
+    case Act::Show: setStatus(captionsOnly() ? tr("实时字幕运行中") : tr("实时翻译运行中")); emit captionChanged(); break;
     case Act::Hide: emit captionChanged(); break;
     case Act::None: break;
     }
@@ -684,7 +684,7 @@ void LiveTranslation::addSentences(std::vector<LiveSentence> sentences) {
         if (context_.size() > 2) context_.removeFirst();
         ++sentenceCount_;
 
-        const auto direct = sameLanguageCaption(work.sentence.text, work.sentence.language, targetLanguage_);
+        const auto direct = captionsOnly() ? work.sentence.text : sameLanguageCaption(work.sentence.text, work.sentence.language, targetLanguage_);
         if (!direct.isEmpty()) {
             displayTranslation(work, direct);
         } else if (const auto* cached = cache_.object(key)) {
@@ -705,7 +705,7 @@ void LiveTranslation::addSpeech(std::vector<LiveSentence> sentences) {
         work.id = ++nextSentence_;
         // The small local model can translate the earlier dialogue instead
         // of the current caption when both are in the prompt.
-        if (provider_ != Local) work.context = context_;
+        if (provider_ != Local && provider_ != None) work.context = context_;
         work.sentence = std::move(sentences[i++]);
         if (work.sentence.wordEndUs) work.wordEnds.push_back(work.sentence.wordEndUs);
         // Neighbouring short phrases from one recognition result fit in the
@@ -721,17 +721,21 @@ void LiveTranslation::addSpeech(std::vector<LiveSentence> sentences) {
         }
         sentenceCount_ += work.phrases;
         work.cacheKey = cacheKey(work.sentence.language, work.sentence.text);
-        if (provider_ != Local) {
+        if (provider_ != Local && provider_ != None) {
             context_ << work.sentence.text;
             if (context_.size() > 2) context_.removeFirst();
         }
         if (queue_.size() >= maxSpeechQueue) skipSpeech(queue_.dequeue(), true);
         queue_.enqueue(std::move(work));
     }
+    if (!request_)
+        while (!queue_.isEmpty() && resolveSpeech(queue_.head())) queue_.dequeue();
 }
 
 bool LiveTranslation::resolveSpeech(const Work& work) {
-    auto translation = sameLanguageCaption(work.sentence.text, work.sentence.language, targetLanguage_);
+    auto translation = captionsOnly()
+        ? work.sentence.text
+        : sameLanguageCaption(work.sentence.text, work.sentence.language, targetLanguage_);
     if (translation.isEmpty()) {
         const auto* cached = cache_.object(work.cacheKey);
         if (!cached) return false;
@@ -761,14 +765,14 @@ void LiveTranslation::queueSpeechResult(const Work& work, QString translation) {
 void LiveTranslation::skipSpeech(const Work& work, bool stale) {
     if (stale) stale_ += work.phrases;
     skippedSentences_ += work.phrases;
-    if (showOriginal_) queueSpeechResult(work, {});
+    if (showOriginal_ || captionsOnly()) queueSpeechResult(work, {});
 }
 
 void LiveTranslation::pruneSpeech(qint64 now) {
     if (draftHideAt_ && now >= draftHideAt_) {
         draftHideAt_ = 0;
         speechDraft_.clear();
-        if (showOriginal_) emit captionChanged();
+        if (showOriginal_ || captionsOnly()) emit captionChanged();
     }
     const auto expired = sink::recordingClockUs() - maxSpeechAgeUs;
     if (speechRequest_ && speechRequest_->sentence.endUs < expired) {
@@ -797,7 +801,7 @@ void LiveTranslation::advanceSpeech(qint64 now) {
             row.translated.clear();
         }
         const bool fallback = row.translated.isEmpty();
-        if (fallback && (!showOriginal_ || now - row.readyAt > minSpeechShowMs)) continue;
+        if (fallback && (!(showOriginal_ || captionsOnly()) || now - row.readyAt > minSpeechShowMs)) continue;
         const auto& line = fallback ? row.work.sentence.text : row.translated;
         speechSwapAt_ = now + (fallback ? minSpeechShowMs
             : std::clamp<qint64>(line.size() * 1000 / 32, minSpeechShowMs, 2200));
@@ -815,7 +819,7 @@ void LiveTranslation::advanceSpeech(qint64 now) {
             if (qEnvironmentVariableIntValue("VEYRA_TEST_LIVE_TEXT_LOG") == 1)
                 log::info("live-translate", std::format("test-id={} delayMs={} text={}", row.work.id, delayMs,
                     row.translated.toStdString()));
-            setStatus(tr("实时翻译运行中"));
+            setStatus(captionsOnly() ? tr("实时字幕运行中") : tr("实时翻译运行中"));
         }
         speechShown_ = std::move(row);
         emit captionChanged();
@@ -849,7 +853,7 @@ void LiveTranslation::displayTranslation(const Work& work, QString translation) 
     if (first && displayDelays_.size() < 256) displayDelays_.push_back(delayMs);
     if (qEnvironmentVariableIntValue("VEYRA_TEST_LIVE_TEXT_LOG") == 1)
         log::info("live-translate", std::format("test-id={} delayMs={} text={}", work.id, delayMs, row->translated.toStdString()));
-    setStatus(tr("实时翻译运行中"));
+    setStatus(captionsOnly() ? tr("实时字幕运行中") : tr("实时翻译运行中"));
     emit captionChanged();
 }
 
@@ -917,7 +921,7 @@ void LiveTranslation::tick() {
     }
     if (!active_) {
         if (serverPort_) stopLocal();
-        setStatus(tr("播放或连接片源后开始翻译"));
+        setStatus(captionsOnly() ? tr("播放或连接片源后开始识别") : tr("播放或连接片源后开始翻译"));
         return;
     }
     if (recognitionSource_ == WindowsCaptions) {
@@ -958,7 +962,7 @@ void LiveTranslation::tick() {
         tickScreen(now);
         return;
     }
-    if (queue_.isEmpty() || request_) return;
+    if (provider_ == None || queue_.isEmpty() || request_) return;
     if (provider_ == Local && !loopbackListenerIsOwned(serverPort_, DWORD(server_.processId()))) {
         serverNotListening(now);
         return;
@@ -973,7 +977,7 @@ void LiveTranslation::tickScreen(qint64 now) {
             setStatus(tr("正在等待画面字幕…"));
         return;
     }
-    if (request_ || screenSequence_ == screenRequested_ || now < screenRetryAt_) return;
+    if (provider_ == None || request_ || screenSequence_ == screenRequested_ || now < screenRetryAt_) return;
     if (provider_ == Local && !loopbackListenerIsOwned(serverPort_, DWORD(server_.processId()))) {
         serverNotListening(now);
         return;

@@ -443,6 +443,23 @@ void screenChecks(const QString& root) {
           "custom region kept inside the picture");
     translation.setEnabled(false);
     check(!translation.screenTextWanted(), "disabling stops reading the picture");
+
+    translation.setProvider(LiveTranslation::None);
+    translation.setShowOriginal(false);
+    translation.setTargetLanguage(QStringLiteral("zh-CN"));
+    translation.setEnabled(true);
+    check(translation.enabled() && translation.captionsOnly() && !translation.modelInstalled(),
+          "captions-only mode enables without a local translation model or API");
+    translation.setPlayback(8, true, false);
+    translation.acceptScreenText(QString(), true, QString());
+    translation.acceptScreenText(QStringLiteral("Stay on the highway."), true, QString());
+    check(QTest::qWaitFor([&] { return translation.translated() == QStringLiteral("Stay on the highway."); }, 2500)
+          && translation.caption() == QStringLiteral("Stay on the highway.") && requests == 1,
+          "captions-only mode displays recognized text directly without requesting translation");
+    translation.setEnabled(false);
+    LiveTranslation reloaded(root);
+    check(reloaded.provider() == LiveTranslation::None && reloaded.captionsOnly(),
+          "captions-only provider persists across restarts");
 }
 
 // The reported cases: a translator slower than the dialogue (a CPU model). A line leaves

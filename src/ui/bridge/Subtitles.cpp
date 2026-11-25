@@ -235,7 +235,8 @@ void QmlPlayerBridge::tickSubtitles() {
         updateSubtitleOverlay(i.subOverlay, draw, view);
         return;
     }
-    const int alignment = draw.empty() ? 2 : 8;
+    const int livePosition = std::clamp(i.prefInt("liveSubtitlePosition", 0), 0, 2);
+    const int alignment = livePosition == 1 ? 2 : livePosition == 2 ? 8 : (draw.empty() ? 2 : 8);
     const auto beginLive = draw.size();
     const int liveSize = i.prefInt("liveSubtitleSize", 0);
     const double liveScale = liveSize > 0 ? double(std::clamp(liveSize, 16, 56)) / 22.0 : view.scale;
@@ -243,6 +244,8 @@ void QmlPlayerBridge::tickSubtitles() {
     const uint32_t liveRgb = liveColor.isValid() ? liveColor.rgb() & 0x00ffffffu : 0x00ffffffu;
     const int liveShadow = i.prefInt("liveSubtitleShadow", -1);
     const int liveLines = i.prefInt("liveSubtitleLines", 0);
+    const double liveOffsetY = double(std::clamp(i.prefInt("liveSubtitleVerticalOffset", 0), 0, 80)) / 100.0;
+    const double liveOffsetX = double(std::clamp(i.prefInt("liveSubtitleHorizontalOffset", 0), -40, 40)) / 100.0;
     const auto appendLive = [&](const QString& text, double scale, uint32_t alpha, int lines, bool italic = false) {
         SubtitleLine line;
         line.text = text.toStdWString();
@@ -251,13 +254,16 @@ void QmlPlayerBridge::tickSubtitles() {
         line.style.primary = (alpha << 24) | liveRgb;
         line.scaleOverride = liveScale * scale;
         if (liveShadow >= 0) line.shadowOffset = std::min(liveShadow, 8);
+        line.offsetX = liveOffsetX;
+        line.offsetY = liveOffsetY;
         line.maximumLines = lines;
         draw.push_back(std::move(line));
     };
-    if (liveTranslation_->showOriginal() && !original.isEmpty() && original != translated)
+    const QString& primaryText = liveTranslation_->captionsOnly() && translated.isEmpty() ? original : translated;
+    if (!liveTranslation_->captionsOnly() && liveTranslation_->showOriginal() && !original.isEmpty() && original != translated)
         appendLive(original, 0.8, 0xb3, 1);
-    if (!translated.isEmpty())
-        appendLive(translated, 1.0, 0xff, std::clamp(liveLines > 0 ? liveLines : view.targetLines, 1, 3));
+    if (!primaryText.isEmpty())
+        appendLive(primaryText, 1.0, 0xff, std::clamp(liveLines > 0 ? liveLines : view.targetLines, 1, 3));
     if (alignment == 8 && draw.size() - beginLive == 2)
         std::swap(draw[beginLive], draw[beginLive + 1]);
     if (!draft.isEmpty()) appendLive(draft, 0.75, 0x99, 1, true);

@@ -84,6 +84,7 @@ QtObject {
         function openWindowsCaptions() {}
         property bool enabled: false
         property int provider: 0
+        readonly property bool captionsOnly: provider === 3
         property string sourceLanguage: ""
         property string targetLanguage: "en"
         property bool showOriginal: true

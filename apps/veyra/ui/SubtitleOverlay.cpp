@@ -40,8 +40,8 @@ std::wstring signatureOf(const std::vector<SubtitleLine>& lines,const SubtitleVi
     for(const auto& line:lines){
         signature+=std::format(L"{}:{}|{:08X}|{:08X}|{}:{}|{}|{}|{}|{}|",line.text.size(),line.text,line.style.primary,line.style.outline,line.style.font.size(),line.style.font,
             line.style.size,line.style.alignment,line.alignOverride,line.secondary?1:0);
-        signature+=std::format(L"{}:{}:{}:{}:{}:{}:{}|",reinterpret_cast<uintptr_t>(line.bitmap.get()),
-            reinterpret_cast<uintptr_t>(line.ass.get()),line.posX,line.posY,line.maximumLines,
+        signature+=std::format(L"{}:{}:{}:{}:{}:{}:{}:{}:{}|",reinterpret_cast<uintptr_t>(line.bitmap.get()),
+            reinterpret_cast<uintptr_t>(line.ass.get()),line.posX,line.posY,line.offsetX,line.offsetY,line.maximumLines,
             line.scaleOverride.value_or(-1),line.shadowOffset.value_or(-1));
         const auto& s=line.style;
         signature+=std::format(L"{}|{}|{}|{}|{}|{}|{}|{}|{}|{}|",s.back,s.outlineWidth,s.shadow,s.marginL,s.marginR,s.marginV,s.bold,s.italic,s.background,s.font.size());
@@ -57,6 +57,7 @@ struct Line {
     Gdiplus::RectF bounds{};
     engine::SubtitleStyle style;
     double shadowOffset=0;
+    double offsetX=0,offsetY=0;
     bool positioned=false;
     float positionX=0,positionY=0;
 };
@@ -148,6 +149,8 @@ void updateSubtitleOverlay(HWND h,const std::vector<SubtitleLine>& lines,const S
             entry.path=std::make_unique<Gdiplus::GraphicsPath>();
             entry.style=line.style;
             entry.shadowOffset=line.shadowOffset.value_or(line.style.shadow>0?line.style.shadow:(view.outline?1.8:0.0));
+            entry.offsetX=std::clamp(line.offsetX,-0.5,0.5);
+            entry.offsetY=std::clamp(line.offsetY,0.0,0.85);
             if(line.alignOverride>=1&&line.alignOverride<=9)entry.style.alignment=line.alignOverride;
             if(entry.style.alignment<1||entry.style.alignment>9)entry.style.alignment=2;
             const double logicalSize=std::max(8.0,(line.style.size>0?line.style.size:24.0)*line.scaleOverride.value_or(view.scale));
@@ -223,6 +226,25 @@ void updateSubtitleOverlay(HWND h,const std::vector<SubtitleLine>& lines,const S
         for(const auto& entry:laid)if(!entry.positioned&&verticalOf(entry.style.alignment)==StringAlignmentCenter){middleHeight+=entry.bounds.Height;++middleCount;}
         if(middleCount>1)middleHeight+=gap*float(middleCount-1);
         float topCursor=padding,middleCursor=std::max(padding,(float(height)-middleHeight)/2);
+        float offsetTopHeight=0,offsetBottomHeight=0;
+        size_t offsetTopCount=0,offsetBottomCount=0;
+        float offsetTopAnchor=padding,offsetBottomAnchor=float(height)-padding;
+        for(const auto& entry:laid){
+            if(entry.positioned||entry.offsetY<=0.0)continue;
+            const auto vertical=verticalOf((entry.style.alignment>=1&&entry.style.alignment<=9)?entry.style.alignment:2);
+            if(vertical==StringAlignmentNear){
+                offsetTopHeight+=entry.bounds.Height;++offsetTopCount;
+                offsetTopAnchor=std::max(offsetTopAnchor,padding+float(entry.offsetY)*float(height));
+            }else if(vertical==StringAlignmentFar){
+                offsetBottomHeight+=entry.bounds.Height;++offsetBottomCount;
+                const float inset=std::max(float(dip(h,view.bottomMargin)),float(entry.offsetY)*float(height));
+                offsetBottomAnchor=std::min(offsetBottomAnchor,float(height)-padding-inset);
+            }
+        }
+        if(offsetTopCount>1)offsetTopHeight+=gap*float(offsetTopCount-1);
+        if(offsetBottomCount>1)offsetBottomHeight+=gap*float(offsetBottomCount-1);
+        float offsetTopCursor=std::min(offsetTopAnchor,std::max(padding,float(height)-padding-offsetTopHeight));
+        float offsetBottomCursor=std::max(offsetBottomAnchor,std::min(float(height)-padding,padding+offsetBottomHeight));
         for(size_t index=laid.size();index-->0;){
             auto& entry=laid[index];
             const int alignment=(entry.style.alignment>=1&&entry.style.alignment<=9)?entry.style.alignment:2;
@@ -237,7 +259,9 @@ void updateSubtitleOverlay(HWND h,const std::vector<SubtitleLine>& lines,const S
             }else{
                 const auto vertical=verticalOf(alignment);
                 const float marginV=float(dip(h,std::max(0.0,entry.style.marginV)));
-                if(vertical==StringAlignmentNear){y=std::max(topCursor,padding+marginV);topCursor=y+blockHeight+gap;}
+                if(entry.offsetY>0.0&&vertical==StringAlignmentNear){y=offsetTopCursor;offsetTopCursor=y+blockHeight+gap;}
+                else if(entry.offsetY>0.0&&vertical==StringAlignmentFar){y=offsetBottomCursor-blockHeight;offsetBottomCursor=y-gap;}
+                else if(vertical==StringAlignmentNear){y=std::max(topCursor,padding+marginV);topCursor=y+blockHeight+gap;}
                 else if(vertical==StringAlignmentCenter){y=middleCursor;middleCursor=y+blockHeight+gap;}
                 else{y=std::min(cursor,float(height)-padding-float(dip(h,view.bottomMargin))-marginV)-blockHeight;cursor=y-gap;}
                 const float marginL=float(dip(h,entry.style.marginL));
@@ -245,6 +269,10 @@ void updateSubtitleOverlay(HWND h,const std::vector<SubtitleLine>& lines,const S
                 const float left=padding+marginL,right=float(width)-padding-marginR;
                 const auto horizontal=horizontalOf(alignment);
                 x=horizontal==StringAlignmentNear?left:horizontal==StringAlignmentFar?right-blockWidth:left+(right-left-blockWidth)/2;
+                if(entry.offsetX!=0.0){
+                    x+=float(entry.offsetX)*float(width);
+                    x=std::clamp(x,padding,std::max(padding,float(width)-padding-blockWidth));
+                }
             }
             Matrix translation;
             translation.Translate(x-entry.bounds.X,y-entry.bounds.Y);

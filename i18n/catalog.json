@@ -6644,6 +6644,19 @@
    "ru": "Без уменьшения"
   },
   {
+   "zh": "不翻译（仅实时字幕）",
+   "src": "qml/LiveTranslationDialog.qml",
+   "zh-TW": "不翻譯（僅即時字幕）",
+   "en": "No translation (live captions only)",
+   "ja": "翻訳しない（ライブ字幕のみ）",
+   "ko": "번역 안 함 (실시간 자막만)",
+   "es": "Sin traducción (solo subtítulos en vivo)",
+   "fr": "Sans traduction (sous-titres en direct uniquement)",
+   "de": "Keine Übersetzung (nur Live-Untertitel)",
+   "pt-BR": "Sem tradução (apenas legendas ao vivo)",
+   "ru": "Без перевода (только субтитры в реальном времени)"
+  },
+  {
    "zh": "不补偿",
    "src": "qml/ProDisplayPanel.qml",
    "zh-TW": "不補償",
@@ -7970,6 +7983,19 @@
    "ru": "Только NVIDIA NR"
   },
   {
+   "zh": "仅显示识别出的实时字幕，不启动翻译模型，也不发送网络请求。",
+   "src": "qml/LiveTranslationDialog.qml",
+   "zh-TW": "僅顯示辨識出的即時字幕，不啟動翻譯模型，也不發送網路請求。",
+   "en": "Display recognized live captions only, without starting a translation model or sending network requests.",
+   "ja": "認識されたライブ字幕のみを表示し、翻訳モデルを起動せず、ネットワーク送信も行いません。",
+   "ko": "인식된 실시간 자막만 표시하며 번역 모델을 실행하거나 네트워크 요청을 보내지 않습니다.",
+   "es": "Muestra solo los subtítulos reconocidos en vivo, sin iniciar un modelo de traducción ni enviar solicitudes de red.",
+   "fr": "Affiche uniquement les sous-titres reconnus en direct, sans lancer de modèle de traduction ni envoyer de requêtes réseau.",
+   "de": "Zeigt nur erkannte Live-Untertitel an, ohne ein Übersetzungsmodell zu starten oder Netzwerkanfragen zu senden.",
+   "pt-BR": "Exibe apenas as legendas ao vivo reconhecidas, sem iniciar o modelo de tradução nem enviar requisições de rede.",
+   "ru": "Показывать только распознанные субтитры без запуска модели перевода и сетевых запросов."
+  },
+  {
    "zh": "仅本次运行有效",
    "src": "qml/LiveTranslationDialog.qml",
    "zh-TW": "僅本次執行有效",
@@ -8345,6 +8371,19 @@
    "de": "Reserve ",
    "pt-BR": "Folga ",
    "ru": "Запас "
+  },
+  {
+   "zh": "使用 Windows 实时字幕识别系统播放的声音，字幕显示在 Veyra 预览画面内。",
+   "src": "qml/LiveTranslationDialog.qml",
+   "zh-TW": "使用 Windows 即時字幕辨識系統播放的聲音，字幕顯示在 Veyra 預覽畫面內。",
+   "en": "Use Windows Live Captions to recognize system audio and display captions inside the Veyra preview.",
+   "ja": "Windows ライブ キャプションでシステム音声を認識し、Veyra プレビュー内に字幕を表示します。",
+   "ko": "Windows 실시간 자막으로 시스템 오디오를 인식해 Veyra 미리보기 화면에 자막을 표시합니다.",
+   "es": "Usa Subtítulos en directo de Windows para reconocer el audio del sistema y mostrar subtítulos en la vista previa de Veyra.",
+   "fr": "Utilise les sous-titres en direct de Windows pour reconnaître l'audio système et afficher les sous-titres dans l'aperçu Veyra.",
+   "de": "Nutzt Windows-Live-Untertitel für Systemaudio und zeigt die Untertitel in der Veyra-Vorschau an.",
+   "pt-BR": "Usa as Legendas ao Vivo do Windows para reconhecer o áudio do sistema e exibir legendas na visualização do Veyra.",
+   "ru": "Использует субтитры Windows для распознавания системного звука и показа субтитров в окне Veyra."
   },
   {
    "zh": "使用 Windows 实时字幕识别系统播放的声音，译文显示在 Veyra 预览画面内。",
@@ -13639,6 +13678,19 @@
    "ru": "Держите левую кнопку на картинке и перетащите разделитель: оригинал слева, усилен справа."
   },
   {
+   "zh": "在画面上显示实时字幕",
+   "src": "qml/LiveTranslationDialog.qml",
+   "zh-TW": "在畫面上顯示即時字幕",
+   "en": "Show live captions on screen",
+   "ja": "画面にライブ字幕を表示",
+   "ko": "화면에 실시간 자막 표시",
+   "es": "Mostrar subtítulos en vivo en pantalla",
+   "fr": "Afficher les sous-titres en direct à l'écran",
+   "de": "Live-Untertitel auf dem Bildschirm anzeigen",
+   "pt-BR": "Mostrar legendas ao vivo na tela",
+   "ru": "Показывать субтитры в реальном времени на экране"
+  },
+  {
    "zh": "在画面上显示实时翻译",
    "src": "qml/LiveTranslationDialog.qml",
    "zh-TW": "在畫面上顯示即時翻譯",
@@ -14848,6 +14900,19 @@
    "ru": "Субтитры %1"
   },
   {
+   "zh": "字幕位置",
+   "src": "qml/LiveTranslationDialog.qml",
+   "zh-TW": "字幕位置",
+   "en": "Subtitle position",
+   "ja": "字幕位置",
+   "ko": "자막 위치",
+   "es": "Posición de subtítulos",
+   "fr": "Position des sous-titres",
+   "de": "Untertitelposition",
+   "pt-BR": "Posição da legenda",
+   "ru": "Положение субтитров"
+  },
+  {
    "zh": "字幕原字体",
    "src": "qml/SubtitleSettingsDialog.qml",
    "zh-TW": "字幕原字型",
@@ -15002,6 +15067,19 @@
    "de": "Der Untertitel-Cache ist voll; spätere Untertitel wurden nicht geladen",
    "pt-BR": "O cache de legendas está completo; as legendas posteriores não foram carregadas",
    "ru": "Подзаголовок кэша заполнен; позже субтитры не были загружены."
+  },
+  {
+   "zh": "字幕行数上限",
+   "src": "qml/LiveTranslationDialog.qml",
+   "zh-TW": "字幕行數上限",
+   "en": "Max subtitle lines",
+   "ja": "字幕の最大行数",
+   "ko": "최대 자막 줄 수",
+   "es": "Límite de líneas de subtítulos",
+   "fr": "Nombre maximal de lignes de sous-titres",
+   "de": "Maximale Untertitelzeilen",
+   "pt-BR": "Máximo de linhas da legenda",
+   "ru": "Максимум строк субтитров"
   },
   {
    "zh": "字幕解码器初始化失败",
@@ -15340,6 +15418,19 @@
    "de": "Intern in Echtzeit verarbeitet und zurückgeschrieben",
    "pt-BR": "Processado internamente em tempo real e gravado de volta",
    "ru": "Обрабатывается в режиме реального времени и переписывается"
+  },
+  {
+   "zh": "实时字幕运行中",
+   "src": "src/ui/LiveTranslation.cpp",
+   "zh-TW": "即時字幕執行中",
+   "en": "Live captions running",
+   "ja": "ライブ字幕を実行中",
+   "ko": "실시간 자막 실행 중",
+   "es": "Subtítulos en vivo activos",
+   "fr": "Sous-titres en direct actifs",
+   "de": "Live-Untertitel aktiv",
+   "pt-BR": "Legendas ao vivo ativas",
+   "ru": "Субтитры в реальном времени активны"
   },
   {
    "zh": "实时翻译",
@@ -18369,6 +18460,19 @@
    "de": "Preset anwenden…",
    "pt-BR": "Aplicar predefinição…",
    "ru": "Применить пресет…"
+  },
+  {
+   "zh": "底部",
+   "src": "qml/LiveTranslationDialog.qml",
+   "zh-TW": "底部",
+   "en": "Bottom",
+   "ja": "下部",
+   "ko": "하단",
+   "es": "Abajo",
+   "fr": "Bas",
+   "de": "Unten",
+   "pt-BR": "Inferior",
+   "ru": "Снизу"
   },
   {
    "zh": "底部字幕",
@@ -21945,6 +22049,19 @@
    "de": "Die Übersetzung beginnt bei laufender Wiedergabe",
    "pt-BR": "A tradução começa quando a fonte é reproduzida",
    "ru": "Перевод начнётся при воспроизведении источника"
+  },
+  {
+   "zh": "播放或连接片源后开始识别",
+   "src": "src/ui/LiveTranslation.cpp",
+   "zh-TW": "播放或連接片源後開始辨識",
+   "en": "Play or connect a source to start recognition",
+   "ja": "再生またはソース接続後に認識を開始します",
+   "ko": "재생하거나 소스를 연결하면 인식을 시작합니다",
+   "es": "Reproduce o conecta una fuente para iniciar el reconocimiento",
+   "fr": "Lancez la lecture ou connectez une source pour démarrer la reconnaissance",
+   "de": "Quelle abspielen oder verbinden, um die Erkennung zu starten",
+   "pt-BR": "Reproduza ou conecte uma fonte para iniciar o reconhecimento",
+   "ru": "Начните воспроизведение или подключите источник для распознавания"
   },
   {
    "zh": "播放时减闪；暂停单帧不体现时域效果",
@@ -27847,6 +27964,19 @@
    "de": "Vergleicht die Quelle mit dem vorherigen Frame: Pixel ohne klare Änderung verwenden die vorherige Ausgabe wieder; klar veränderte Bereiche nehmen das neue Ergebnis direkt auf.",
    "pt-BR": "Compara a fonte com o quadro anterior: pixels sem uma mudança clara reutilizam a saída anterior; áreas claramente alteradas tomam o novo resultado diretamente.",
    "ru": "Сравнивает источник с предыдущим кадром: пиксели без четкого изменения повторно используют предыдущий вывод; четко измененные области принимают новый результат напрямую."
+  },
+  {
+   "zh": "水平偏移",
+   "src": "qml/LiveTranslationDialog.qml",
+   "zh-TW": "水平偏移",
+   "en": "Horizontal offset",
+   "ja": "水平オフセット",
+   "ko": "수평 오프셋",
+   "es": "Desplazamiento horizontal",
+   "fr": "Décalage horizontal",
+   "de": "Horizontale Verschiebung",
+   "pt-BR": "Deslocamento horizontal",
+   "ru": "Горизонтальное смещение"
   },
   {
    "zh": "没有匹配的格式",
@@ -34882,6 +35012,19 @@
    "ru": "Коэффициент реального времени %1 · Среднее время перевода %2 мс · Пропущено фраз %3"
   },
   {
+   "zh": "识别实时倍率 %1 · 跳过 %2 句",
+   "src": "qml/LiveTranslationDialog.qml",
+   "zh-TW": "辨識即時倍率 %1 · 跳過 %2 句",
+   "en": "Recognition RTF %1 · Skipped %2",
+   "ja": "認識リアルタイム倍率 %1 · スキップ %2 文",
+   "ko": "인식 실시간 배율 %1 · 건너뜀 %2문장",
+   "es": "RTF de reconocimiento %1 · Omitidas %2",
+   "fr": "RTF de reconnaissance %1 · Ignorées %2",
+   "de": "Erkennungs-RTF %1 · Übersprungen %2",
+   "pt-BR": "RTF de reconhecimento %1 · Ignoradas %2",
+   "ru": "RTF распознавания %1 · Пропущено %2"
+  },
+  {
    "zh": "识别并保护准心，框内背景继续补帧",
    "src": "qml/MaskEditor.qml",
    "zh-TW": "辨識並保護準心，框內背景繼續補幀",
@@ -34893,6 +35036,19 @@
    "de": "Erkennt und schützt das Fadenkreuz, während die Frame-Generierung für den Hintergrund weiterläuft",
    "pt-BR": "Detecta e protege a mira e continua gerando quadros para o fundo",
    "ru": "Обнаруживает и защищает прицел, сохраняя генерацию кадров для фона"
+  },
+  {
+   "zh": "识别播放中的声音，实时字幕直接显示在 Veyra 预览画面内。",
+   "src": "qml/LiveTranslationDialog.qml",
+   "zh-TW": "辨識播放中的聲音，即時字幕直接顯示在 Veyra 預覽畫面內。",
+   "en": "Recognize playing audio and show live captions directly inside the Veyra preview.",
+   "ja": "再生中の音声を認識し、Veyra プレビュー内にライブ字幕を直接表示します。",
+   "ko": "재생 중인 오디오를 인식해 Veyra 미리보기 화면에 실시간 자막을 바로 표시합니다.",
+   "es": "Reconoce el audio en reproducción y muestra los subtítulos en vivo directamente en la vista previa de Veyra.",
+   "fr": "Reconnaît l'audio en cours de lecture et affiche directement les sous-titres en direct dans l'aperçu Veyra.",
+   "de": "Erkennt abgespieltes Audio und zeigt Live-Untertitel direkt in der Veyra-Vorschau an.",
+   "pt-BR": "Reconhece o áudio em reprodução e exibe legendas ao vivo diretamente na visualização do Veyra.",
+   "ru": "Распознаёт воспроизводимый звук и сразу показывает субтитры в окне Veyra."
   },
   {
    "zh": "识别播放中的声音，翻译后的字幕显示在 Veyra 预览画面内。",
@@ -35948,6 +36104,19 @@
    "ru": "Read Source Треки"
   },
   {
+   "zh": "读取画面上的字幕文字并直接显示在 Veyra 预览画面内。",
+   "src": "qml/LiveTranslationDialog.qml",
+   "zh-TW": "讀取畫面上的字幕文字並直接顯示在 Veyra 預覽畫面內。",
+   "en": "Read on-screen subtitle text and display it directly inside the Veyra preview.",
+   "ja": "画面上の字幕テキストを読み取り、Veyra プレビュー内に直接表示します。",
+   "ko": "화면의 자막 텍스트를 읽어 Veyra 미리보기 화면에 바로 표시합니다.",
+   "es": "Lee el texto de subtítulos en pantalla y lo muestra directamente en la vista previa de Veyra.",
+   "fr": "Lit le texte des sous-titres à l'écran et l'affiche directement dans l'aperçu Veyra.",
+   "de": "Liest Bildschirm-Untertiteltext und zeigt ihn direkt in der Veyra-Vorschau an.",
+   "pt-BR": "Lê o texto das legendas na tela e o exibe diretamente na visualização do Veyra.",
+   "ru": "Считывает текст субтитров с экрана и сразу показывает его в окне Veyra."
+  },
+  {
    "zh": "读取画面上的英文字幕等文字并翻译，译文显示在 Veyra 预览画面内。",
    "src": "qml/LiveTranslationDialog.qml",
    "zh-TW": "讀取畫面上的英文字幕等文字並翻譯，譯文顯示在 Veyra 預覽畫面內。",
@@ -36583,6 +36752,32 @@
    "de": "Höher ist stabiler in Ruhe; bewegte Gesichter werden in beiden Richtungen genau verfolgt",
    "pt-BR": "Mais alto é mais estável em repouso; rostos em movimento são seguidos de perto de qualquer forma",
    "ru": "Выше стабильнее в покое; движущиеся лица следуют в любом случае."
+  },
+  {
+   "zh": "距底部距离",
+   "src": "qml/LiveTranslationDialog.qml",
+   "zh-TW": "距底部距離",
+   "en": "Distance from bottom",
+   "ja": "下端からの距離",
+   "ko": "하단 여백",
+   "es": "Distancia desde abajo",
+   "fr": "Distance du bas",
+   "de": "Abstand von unten",
+   "pt-BR": "Distância da base",
+   "ru": "Отступ снизу"
+  },
+  {
+   "zh": "距顶部距离",
+   "src": "qml/LiveTranslationDialog.qml",
+   "zh-TW": "距頂部距離",
+   "en": "Distance from top",
+   "ja": "上端からの距離",
+   "ko": "상단 여백",
+   "es": "Distancia desde arriba",
+   "fr": "Distance du haut",
+   "de": "Abstand von oben",
+   "pt-BR": "Distância do topo",
+   "ru": "Отступ сверху"
   },
   {
    "zh": "跟得上，每帧都推理",
@@ -40834,6 +41029,19 @@
    "de": "Seitenwechsler",
    "pt-BR": "Seletor de páginas",
    "ru": "Переключатель страниц"
+  },
+  {
+   "zh": "顶部",
+   "src": "qml/LiveTranslationDialog.qml",
+   "zh-TW": "頂部",
+   "en": "Top",
+   "ja": "上部",
+   "ko": "상단",
+   "es": "Arriba",
+   "fr": "Haut",
+   "de": "Oben",
+   "pt-BR": "Superior",
+   "ru": "Сверху"
   },
   {
    "zh": "顶部字幕",

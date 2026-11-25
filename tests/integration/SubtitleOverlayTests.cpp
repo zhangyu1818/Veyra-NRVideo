@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <array>
 #include <vector>
 #include <iostream>
 static std::vector<unsigned long> pixels;
@@ -83,6 +84,35 @@ int wmain(int argc,wchar_t** argv){
     live.shadowOffset=0.0;
     updateSubtitleOverlay(overlay,{live},view);
     check(pixels==withoutShadow,"zero shadow returns to the same native raster");
+    auto inkBounds=[&](){
+        int x0=imageWidth,x1=-1,y0=imageHeight,y1=-1;
+        for(int y=0;y<imageHeight;++y)for(int x=0;x<imageWidth;++x)
+            if((pixels[size_t(y)*imageWidth+x]>>24)>30){x0=std::min(x0,x);x1=std::max(x1,x);y0=std::min(y0,y);y1=std::max(y1,y);}
+        return std::array<int,4>{x0,x1,y0,y1};
+    };
+    SubtitleLine positioned;positioned.text=L"HHHH";positioned.style.size=28;positioned.style.shadow=0;positioned.style.alignment=2;
+    updateSubtitleOverlay(overlay,{positioned},view);const auto baseBottom=inkBounds();
+    positioned.offsetY=0.25;
+    updateSubtitleOverlay(overlay,{positioned},view);const auto raisedBottom=inkBounds();
+    check(raisedBottom[3]<baseBottom[2],"positive bottom offsetY raises live captions above bottom");
+    positioned.style.alignment=8;positioned.offsetY=0.0;
+    updateSubtitleOverlay(overlay,{positioned},view);const auto baseTop=inkBounds();
+    positioned.offsetY=0.20;
+    updateSubtitleOverlay(overlay,{positioned},view);const auto loweredTop=inkBounds();
+    check(loweredTop[2]>baseTop[3],"positive top offsetY lowers top-aligned live captions");
+    positioned.offsetX=-0.30;
+    updateSubtitleOverlay(overlay,{positioned},view);const auto shiftedLeft=inkBounds();
+    positioned.offsetX=0.30;
+    updateSubtitleOverlay(overlay,{positioned},view);const auto shiftedRight=inkBounds();
+    check(shiftedLeft[0]>=0&&shiftedRight[1]<imageWidth&&shiftedLeft[0]<loweredTop[0]&&shiftedRight[1]>loweredTop[1],
+          "horizontal offset shifts live captions left and right within bounds");
+    SubtitleLine stackedA=red,stackedB=green;stackedA.style.alignment=stackedB.style.alignment=2;stackedA.offsetY=stackedB.offsetY=0.25;
+    updateSubtitleOverlay(overlay,{stackedA,stackedB},view);
+    int sr0=480,sr1=-1,sg0=480,sg1=-1;
+    for(int y=0;y<imageHeight;++y)for(int x=0;x<imageWidth;++x){auto c=pixels[size_t(y)*imageWidth+x];int r=(c>>16)&255,g=(c>>8)&255;
+        if(r>30&&r>2*g){sr0=std::min(sr0,y);sr1=std::max(sr1,y);}
+        if(g>30&&g>2*r){sg0=std::min(sg0,y);sg1=std::max(sg1,y);}}
+    check(sr1>=sr0&&sg1>=sg0&&(sr1<sg0||sg1<sr0),"offset stacked live lines do not overlap");
     RECT rect{0,0,640,480};
     const auto original=signatureOf({red},view,rect);
     auto changes=[&](auto change){auto copy=red;change(copy.style);check(signatureOf({copy},view,rect)!=original,"style mutation invalidates cache");};
